@@ -12,6 +12,14 @@ Intentional bugs (lab only, not an exploit kit):
 
 Deep paths, GDB notes, and `dmesg` what to look for: [Docs/vulnerabilities.md](Docs/vulnerabilities.md).
 
+## PDFs
+
+| file | pages | contents |
+|------|-------|----------|
+| [Docs/vuln_lkm.pdf](Docs/vuln_lkm.pdf) | 7 | How the LKM works (miscdevice, ioctl switch, ADD/SUB wrap, STR `kbuf[32]`) |
+| [Docs/vuln_lkm_cli.pdf](Docs/vuln_lkm_cli.pdf) | 10 | How the CLI works (ABI, argv/interactive, base64 dumps, full source) |
+| [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf) | 40 | Install, QEMU/GDB sessions, ioctl/IRQL/char-device theory, overflows, appendices |
+
 ## Layout
 
 | file | role |
@@ -24,7 +32,7 @@ Deep paths, GDB notes, and `dmesg` what to look for: [Docs/vulnerabilities.md](D
 | `scripts/install_qemu_gdb.sh` | install QEMU + GDB |
 | `scripts/run_qemu.sh` | boot guest with GDB stub `:1234` |
 | `scripts/debug_gdb.sh` | attach GDB, breakpoints per vuln |
-| `Docs/` | install, vulns, CLI help/examples |
+| `Docs/` | markdown + the three PDFs above |
 
 ## Build and run (host kernel)
 
@@ -78,6 +86,6 @@ KERNEL=/path/to/bzImage ./scripts/run_qemu.sh   # terminal 1
 ./scripts/debug_gdb.sh                          # terminal 2
 ```
 
-Breakpoints: `vuln_lkm_ioctl`, `vuln_lkm_add`, `vuln_lkm_sub`, `vuln_lkm_str`. Full walkthrough: [Docs/install-and-run.md](Docs/install-and-run.md).
+Breakpoints: `vuln_lkm_ioctl`, `vuln_lkm_add`, `vuln_lkm_sub`, `vuln_lkm_str`. Full walkthrough: [Docs/install-and-run.md](Docs/install-and-run.md) and [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf).
 
 Run STR tests in QEMU, not on a host you care about.
