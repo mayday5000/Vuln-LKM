@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-sudo rmmod mini_vuln
-echo "unloaded mini_vuln"
+sudo rmmod vuln_lkm
+echo "unloaded vuln_lkm"
