@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
 make module
+sudo rmmod mini_vuln 2>/dev/null || true
 sudo rmmod int_bounds 2>/dev/null || true
-sudo insmod ./int_bounds.ko
-sudo chmod 666 /dev/int_bounds 2>/dev/null || true
-echo "loaded /dev/int_bounds"
-ls -l /dev/int_bounds
+sudo insmod ./mini_vuln.ko
+sudo chmod 666 /dev/mini_vuln 2>/dev/null || true
+echo "loaded /dev/mini_vuln"
+ls -l /dev/mini_vuln
