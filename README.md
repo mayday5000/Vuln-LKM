@@ -14,11 +14,13 @@ Deep paths, GDB notes, and `dmesg` what to look for: [Docs/vulnerabilities.md](D
 
 ## PDFs
 
+Black header, green footer, yellow syntax-colored source. Diagrams in the driver manual.
+
 | file | pages | contents |
 |------|-------|----------|
-| [Docs/vuln_lkm.pdf](Docs/vuln_lkm.pdf) | 7 | How the LKM works (miscdevice, ioctl switch, ADD/SUB wrap, STR `kbuf[32]`) |
-| [Docs/vuln_lkm_cli.pdf](Docs/vuln_lkm_cli.pdf) | 10 | How the CLI works (ABI, argv/interactive, base64 dumps, full source) |
-| [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf) | 40 | Install, QEMU/GDB sessions, ioctl/IRQL/char-device theory, overflows, appendices |
+| [Docs/vuln_lkm.pdf](Docs/vuln_lkm.pdf) | 20 | How the LKM works: every function and its purpose, ABI, figures, kernel.org links |
+| [Docs/vuln_lkm_cli.pdf](Docs/vuln_lkm_cli.pdf) | 11 | How the CLI works (ABI, argv/interactive, base64 dumps, full source) |
+| [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf) | 43 | Install, QEMU/GDB sessions, ioctl/IRQL/char-device theory, overflows, appendices |
 
 ## Layout
 
