@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-sudo rmmod int_bounds
-echo "unloaded int_bounds"
+sudo rmmod mini_vuln
+echo "unloaded mini_vuln"
