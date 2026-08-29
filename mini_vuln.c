@@ -1,7 +1,6 @@
 #include <linux/module.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
-#include <linux/slab.h>
 
 #include "mini_vuln.h"
 
@@ -22,16 +21,14 @@ static int str_overflow(unsigned long arg)
 	if (copy_from_user(&req, (void __user *)arg, sizeof(req)))
 		return -EFAULT;
 
+	if (req.len > MINI_VULN_STR_MAX)
+		req.len = MINI_VULN_STR_MAX;
+
 	memset(kbuf, 0, sizeof(kbuf));
-	/*
-	 * Educational: kbuf is 32 bytes. req.len is not checked against that.
-	 * memcpy uses the user-supplied length as-is.
-	 */
 	printk(KERN_INFO "mini_vuln: STR len=%u into kbuf[%u]\n",
 	       req.len, MINI_VULN_KBUF);
+	/* kbuf is 32 bytes; req.len is not checked against MINI_VULN_KBUF. */
 	memcpy(kbuf, req.data, req.len);
-	kbuf[MINI_VULN_KBUF - 1] = '\0';
-	printk(KERN_INFO "mini_vuln: STR kbuf=\"%s\"\n", kbuf);
 	return 0;
 }
 
