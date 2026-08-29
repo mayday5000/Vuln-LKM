@@ -1,6 +1,8 @@
-# int_bounds_driver
+# mini_vuln
 
-Tiny educational Linux miscdevice lab. One `u32` in the kernel. `ADD` and `SUB` wrap on purpose (integer overflow / underflow). Not an exploit kit.
+Educational Linux miscdevice lab. Integer wrap (`ADD`/`SUB` on a `u32`) plus a string copy into a 32-byte kernel buffer with no length check vs that buffer. Not an exploit kit.
+
+GitHub repo slug is still `int_bounds_driver`; the module and `/dev` node are `mini_vuln`.
 
 ## Build
 
@@ -8,20 +10,17 @@ Tiny educational Linux miscdevice lab. One `u32` in the kernel. `ADD` and `SUB` 
 make
 chmod +x load.sh unload.sh
 ./load.sh
-./int_bounds_cli
+./mini_vuln_cli
 ```
 
-Needs kernel headers for the running kernel. Device node is `/dev/int_bounds`.
+Device node: `/dev/mini_vuln`.
 
 ## ioctls
 
 | cmd | what |
 |-----|------|
-| GET | read current `g_val` |
-| SET | store a new `g_val` |
-| ADD | `g_val += n` with wrap |
-| SUB | `g_val -= n` with wrap |
+| GET / SET | read or store `g_val` |
+| ADD / SUB | wrap on overflow / underflow |
+| STR | copy `len` bytes into a 32-byte kernel stack buffer |
 
-Watch wrap in `dmesg` too. Example: SET 10, SUB 11 -> 4294967295. SET 0xfffffffe, ADD 3 -> 1.
-
-The CLI prints the number (decimal + hex) and the base64 of the ioctl payload for every call.
+CLI option 5 prints the string and the base64 of the whole ioctl payload. Kernel buffer is 32 bytes; a longer string overflows it.
