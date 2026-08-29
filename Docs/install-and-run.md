@@ -1,96 +1,85 @@
 # Install, run, QEMU, GDB
 
-## What you are running
+## Host crash vs guest crash
 
-`vuln_lkm` is a **loadable kernel module** (LKM). You compile a `.ko` against the kernel headers of the kernel that will load it, then `insmod` it. It is not built into `vmlinux`. Once loaded it registers a misc character device `/dev/vuln_lkm`. Userspace talks to it with `ioctl`.
+`vuln_lkm` is an LKM. `insmod` inserts it into **whichever kernel is running in that machine**.
 
-Host path (module in *this* running kernel):
+| how you load | what can die | snapshot? |
+|---|---|---|
+| `HOST=1 ./load.sh` (insmod here) | this Ubuntu (especially `str` longer than 32 bytes) | yes, or use a disposable VM |
+| `./load.sh` / `./install.sh` (QEMU) | only the QEMU guest | no |
+
+ADD/SUB wrap a `u32` and almost never panic. STR `memcpy` into `kbuf[32]` can oops.
+
+QEMU does **not** debug the live host kernel. It boots `build/bzImage`, which is a **copy** of `/boot/vmlinuz-$(uname -r)`, with a busybox initramfs that already contains `vuln_lkm.ko` and the CLI. Same vermagic, separate VM. `-no-reboot` so a guest panic just stops QEMU.
+
+## install.sh
+
+```sh
+chmod +x install.sh load.sh unload.sh scripts/*.sh
+./install.sh
+```
+
+That runs `scripts/install_qemu_gdb.sh` (QEMU, GDB, `linux-headers-$(uname -r)`, `busybox-static`, cpio), `make all` into `build/`, `scripts/build_initramfs.sh`, then `load.sh` (QEMU).
+
+## Why the CLI was missing
+
+`make module` only builds the `.ko`. `load.sh` used to call only that. `make` / `make all` now builds both into `build/`:
+
+- `build/vuln_lkm.ko`
+- `build/vuln_lkm_cli`
+
+## Host path (dangerous)
 
 ```sh
 make
-chmod +x load.sh unload.sh scripts/*.sh
-./load.sh
-./vuln_lkm_cli --help
-./vuln_lkm_cli get
+HOST=1 ./load.sh
+./build/vuln_lkm_cli get
+./unload.sh
 ```
 
-Needs `build-essential` and `linux-headers-$(uname -r)`.
-
-`load.sh` `insmod`s `vuln_lkm.ko` and ensures `/dev/vuln_lkm` is world-accessible. `unload.sh` `rmmod`s it.
-
-## QEMU + GDB packages
+## QEMU path (default)
 
 ```sh
-sudo ./scripts/install_qemu_gdb.sh
+./scripts/build_initramfs.sh   # if you already have packages
+./load.sh                      # or ./scripts/run_qemu.sh
 ```
 
-Installs `qemu-system-x86_64` and `gdb` (apt/dnf/pacman). Also tries kernel headers / build tools so you can compile the LKM.
+Guest:
 
-## QEMU runner
-
-`scripts/run_qemu.sh` starts QEMU with a GDB stub on TCP port 1234 (`-gdb tcp::1234`), serial console, `nokaslr`, and a 9p share of this repo (mount tag `modshare`).
-
-You must supply a kernel image. The script does not download one.
-
-```sh
-export KERNEL=/path/to/bzImage
-export INITRD=/path/to/initramfs.cpio.gz   # optional
-./scripts/run_qemu.sh
+```
+/vuln_lkm_cli get
+/vuln_lkm_cli str hello
 ```
 
-Use a debug-friendly `bzImage` (symbols, `nokaslr`). Build your own from kernel.org or reuse a distro debug kernel. Put `bzImage` in the repo root to use the default path.
+Quit QEMU: `Ctrl-A` then `X`.
 
-In the guest, after you have a rootfs that can `insmod`:
+## GDB
 
-```sh
-mkdir -p /mod
-mount -t 9p -o trans=virtio modshare /mod
-insmod /mod/vuln_lkm.ko
-ls -l /dev/vuln_lkm
-```
-
-If 9p is not in your initramfs, copy `vuln_lkm.ko` into the initrd instead.
-
-## GDB script
-
-In another terminal, while QEMU is up:
+Other terminal while QEMU is up:
 
 ```sh
 ./scripts/debug_gdb.sh
 ```
 
-That runs `gdb -x scripts/vuln_lkm.gdb`, which does `target remote localhost:1234` and sets:
-
-| breakpoint | vulnerability |
-|---|---|
-| `vuln_lkm_ioctl` | every ioctl hits the dispatcher first |
-| `vuln_lkm_add` | integer overflow (`g_val + n` wrap) |
-| `vuln_lkm_sub` | integer underflow (`g_val - n` wrap) |
-| `vuln_lkm_str` | string copy into 32-byte `kbuf` |
-
-Module symbols are often pending until the `.ko` is loaded. After `insmod` in the guest:
+Symbols: `build/vuln_lkm.ko`. After the guest `insmod` (initramfs does it for you):
 
 ```
 guest$ cat /sys/module/vuln_lkm/sections/.text
-(gdb) add-symbol-file vuln_lkm.ko 0xTHAT_ADDRESS
+(gdb) add-symbol-file build/vuln_lkm.ko 0xTHAT_ADDRESS
 ```
 
-Then the four breakpoints can bind. `continue`, trigger the ioctl from the guest CLI, and GDB stops in the matching function.
-
-Inspect:
-
-- ADD/SUB: `p g_val`, `p n`, `p before` (step across the add/sub)
-- STR: `p req.len`, `p/x req.data[0]@32`, `p &kbuf`, `p sizeof(kbuf)`
+Breakpoints: `vuln_lkm_ioctl`, `vuln_lkm_add`, `vuln_lkm_sub`, `vuln_lkm_str`.
 
 ## Common failures
 
 | symptom | likely cause |
 |---|---|
-| `make` fails on `M=` | missing `linux-headers-$(uname -r)` |
-| `open /dev/vuln_lkm` | module not loaded, or udev node not created yet |
-| QEMU exits immediately | `KERNEL` path wrong |
-| GDB `target remote` refuses | QEMU not running, or port not 1234 |
-| breakpoints pending forever | `.ko` not loaded, or no `add-symbol-file` |
-| `nokaslr` ignored | cmdline not in `-append`, or kernel built without support |
+| no `vuln_lkm_cli` | ran `make module` only; run `make` / `make all` |
+| `file_operations` incomplete type | old tree without `#include <linux/fs.h>`; `git pull` |
+| `make` / missing headers | `linux-headers-$(uname -r)` |
+| QEMU: no bzImage | `/boot/vmlinuz-$(uname -r)` not copied; rerun `build_initramfs.sh` (may need sudo) |
+| guest insmod Invalid module format | `.ko` not built for this `uname -r` |
+| host oops on `str` | you used `HOST=1`; use QEMU |
 
-See also [vulnerabilities.md](vulnerabilities.md) and [cli.md](cli.md).
+See [vulnerabilities.md](vulnerabilities.md) and [cli.md](cli.md).

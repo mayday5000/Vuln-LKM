@@ -1,0 +1,14 @@
+build/
+*.o
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+Module.symvers
+modules.order
+.tmp_versions/
+.cache.mk
+vuln_lkm_cli
+mini_vuln_cli
+int_bounds_cli
+bzImage
