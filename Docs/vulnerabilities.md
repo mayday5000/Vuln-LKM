@@ -2,7 +2,7 @@
 
 Educational lab. These are intentional, obvious bugs. This document describes what the driver does, not how to turn them into privilege escalation.
 
-Shared types live in `vuln_lkm.h`. Dispatch is `vuln_lkm_ioctl` in `vuln_lkm.c`. Userspace uses `vuln_lkm_cli`.
+Shared types live in `vuln_lkm.h`. Dispatch is `vuln_lkm_ioctl` in `vuln_lkm.c`. Userspace is `build/vuln_lkm_cli` (guest: `/vuln_lkm_cli`). Load with `./install.sh` / `./load.sh` (QEMU + busybox). `HOST=1 ./load.sh` insmods this Ubuntu and can panic it.
 
 `g_val` is a static `u32` in the module, initial value `100`.
 
@@ -104,7 +104,7 @@ GDB: `break vuln_lkm_str`. After `copy_from_user`: `p req.len`, `p req.data`. Be
 
 Example: `str hello` (len 5, fits). `str` with 40 `A`s (len 40, overflows `kbuf`).
 
-This can panic the guest if you smash far enough. Use a VM (QEMU) for STR tests, not a machine you care about.
+This can panic the kernel that loaded the module. Default `./load.sh` is QEMU (busybox initramfs + a copy of the host vmlinuz): only the guest dies. `HOST=1 ./load.sh` can oops this Ubuntu. Do STR in QEMU.
 
 ## What this is not
 

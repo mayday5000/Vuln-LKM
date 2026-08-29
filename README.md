@@ -38,9 +38,9 @@ HOST=1 ./load.sh      # host insmod — can panic this Ubuntu
 
 | file | pages | contents |
 |------|-------|----------|
-| [Docs/vuln_lkm.pdf](Docs/vuln_lkm.pdf) | 20 | How the LKM works |
+| [Docs/vuln_lkm.pdf](Docs/vuln_lkm.pdf) | 21 | How the LKM works |
 | [Docs/vuln_lkm_cli.pdf](Docs/vuln_lkm_cli.pdf) | 11 | How the CLI works |
-| [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf) | 43 | Install, QEMU/GDB, ioctl/IRQL/overflows |
+| [Docs/vuln_lkm_run_debug.pdf](Docs/vuln_lkm_run_debug.pdf) | 47 | Install, QEMU/GDB, busybox, ioctl/IRQL/overflows |
 
 ## Layout
 

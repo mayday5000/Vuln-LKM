@@ -1,15 +1,20 @@
 # CLI help and examples
 
-Binary: `./vuln_lkm_cli` after `make user` (or `make`). Device must exist (`./load.sh`).
+Binary after `make` / `make all`: **`./build/vuln_lkm_cli`** (not the repo root; `make module` only builds the `.ko`).
+
+Device:
+
+- QEMU (default `./load.sh` / `./install.sh`): initramfs already `insmod`s; guest binary is **`/vuln_lkm_cli`**.
+- Host (dangerous): `HOST=1 ./load.sh` then `./build/vuln_lkm_cli`. STR longer than 32 bytes can oops this Ubuntu.
 
 ## Help
 
 ```
-./vuln_lkm_cli --help
-./vuln_lkm_cli -h
+./build/vuln_lkm_cli --help
+./build/vuln_lkm_cli -h
 ```
 
-Prints usage, ioctl list, and the examples below. Interactive menu also has `h`.
+In the guest: `/vuln_lkm_cli -h`. Interactive menu also has `h`.
 
 ## Help text (what you should see)
 
@@ -38,18 +43,20 @@ Each call prints:
 
 ## Examples
 
+Use `/vuln_lkm_cli` inside QEMU, or `./build/vuln_lkm_cli` on the host.
+
 Read the current kernel `g_val` (starts at 100 after a fresh insmod):
 
 ```
-./vuln_lkm_cli get
+./build/vuln_lkm_cli get
 ```
 
 Set, then underflow:
 
 ```
-./vuln_lkm_cli set 10
-./vuln_lkm_cli sub 11
-./vuln_lkm_cli get
+./build/vuln_lkm_cli set 10
+./build/vuln_lkm_cli sub 11
+./build/vuln_lkm_cli get
 ```
 
 `get` should show `4294967295` (`0xffffffff`). `dmesg` should say `wrap=yes`.
@@ -57,9 +64,9 @@ Set, then underflow:
 Overflow:
 
 ```
-./vuln_lkm_cli set 0xfffffffe
-./vuln_lkm_cli add 3
-./vuln_lkm_cli get
+./build/vuln_lkm_cli set 0xfffffffe
+./build/vuln_lkm_cli add 3
+./build/vuln_lkm_cli get
 ```
 
 `get` should show `1`.
@@ -67,21 +74,21 @@ Overflow:
 String that fits in 32 bytes:
 
 ```
-./vuln_lkm_cli str hello
+./build/vuln_lkm_cli str hello
 ```
 
-String longer than the kernel `kbuf` (40 bytes):
+String longer than the kernel `kbuf` (40 bytes) — **QEMU only**:
 
 ```
-./vuln_lkm_cli str AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+/vuln_lkm_cli str AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
-Do that in QEMU. Watch `dmesg` for `STR len=40 into kbuf[32]`. In GDB, `break vuln_lkm_str`.
+Watch guest dmesg for `STR len=40 into kbuf[32]`. In GDB, `break vuln_lkm_str`.
 
 Interactive:
 
 ```
-./vuln_lkm_cli
+./build/vuln_lkm_cli
 > 1
 > 2
 value to SET (dec or 0xhex): 10
