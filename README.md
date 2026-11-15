@@ -2,6 +2,8 @@
 
 Educational **Linux Loadable Kernel Module** (LKM). After load it registers a misc **character device** `/dev/vuln_lkm`. Userspace talks to it only through `ioctl`.
 
+**Author:** Damian Andres Ulanowicz
+
 Intentional bugs (lab only, not an exploit kit):
 
 1. **Integer overflow** — `vuln_lkm_add`: `g_val = g_val + n` on a `u32` with no saturation check.
@@ -71,3 +73,9 @@ HOST=1 ./load.sh      # host insmod — can panic this Ubuntu
 In QEMU the binary is `/vuln_lkm_cli`. Long `str` belongs there, not on the host.
 
 More: [Docs/cli.md](Docs/cli.md), [Docs/install-and-run.md](Docs/install-and-run.md).
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). Copyright (c) 2026 Damian Andres Ulanowicz.
