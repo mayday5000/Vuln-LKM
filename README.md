@@ -1,6 +1,8 @@
 # Vuln-LKM
 
-Educational **Linux Loadable Kernel Module** (LKM). After load it registers a misc **character device** `/dev/vuln_lkm`. Userspace talks to it only through `ioctl`.
+Deliberately vulnerable Linux kernel module (LKM) for kernel security training. A misc character device whose ioctl handlers contain an integer overflow, an integer underflow and a stack buffer overflow, with a userspace CLI, a QEMU and GDB debugging lab, and PDF walkthroughs.
+
+After load it registers a misc **character device** `/dev/vuln_lkm`. Userspace talks to it only through `ioctl`.
 
 **Author:** Damian Andres Ulanowicz
 
